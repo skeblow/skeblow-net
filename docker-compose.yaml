@@ -20,10 +20,19 @@ services:
       - "traefik.http.routers.dashboard.rule=Host(`skeblow.net`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
       - "traefik.http.routers.dashboard.service=api@internal"
 
-  whoami:
-    image: "traefik/whoami"
-    container_name: "simple-service"
+  skeblow-bfpt:
+    extends:
+      file: ../bug-free-palm-tree/docker-compose.yaml
+      service: bfpt
+      container_name: "skeblow-bfpt"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`whoami.skeblow.net`)"
-      - "traefik.http.routers.whoami.entrypoints=web"
+      - "traefik.http.routers.bfpt.rule=Host(`bfpt.skeblow.net`)"
+      - "traefik.http.routers.bfpt.entrypoints=web"
+    
+  skeblow-bfpt-db:
+    extends:
+      container_name: "skeblow-bfpt-db"
+      file: ../bug-free-palm-tree/docker-compose.yaml
+      service: bfpt-db
+
