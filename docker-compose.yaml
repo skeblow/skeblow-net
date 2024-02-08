@@ -3,36 +3,75 @@ services:
     image: traefik
     container_name: traefik
     restart: unless-stopped
-    command:
-      #- "--log.level=DEBUG"
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
+    configs:
+      - source: traefik
+        target: /etc/traefik/traefik.yaml
     ports:
       - "80:80"
       - "8080:8080"
       - "443:443"
     volumes:
-      - "/run/user/1000/docker.sock:/var/run/docker.sock:ro"
+      - ./letsencrypt:/letsencrypt
+    environment:
+      CF_DNS_API_TOKEN_FILE: /run/secrets/cf-dns-api-token
+    secrets:
+      - cf-dns-api-token
+    networks:
+      - default
+      - traefik-docker-socket
+    depends_on:
+      - traefik-docker-socket-proxy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`skeblow.net`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
-      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.api.entrypoints=web"
+      - "traefik.http.routers.api.rule=Host(`skeblow.net`, `www.skeblow.net`)"
+      - "traefik.http.routers.api.service=api@internal"
+
+  traefik-docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy
+    container_name: traefik-docker-socket-proxy
+    privileged: true
+    restart: unless-stopped
+    networks:
+      - traefik-docker-socket
+    environment:
+      CONTAINERS: 1
+      SERVICES: 1
+      NETWORKS: 1
+      TASKS: 1
+    volumes:
+      - "/run/user/1000/docker.sock:/var/run/docker.sock:ro"
 
   skeblow-bfpt:
     extends:
       file: ../bug-free-palm-tree/docker-compose.yaml
       service: bfpt
       container_name: "skeblow-bfpt"
+    networks:
+      - default
+      - bfpt
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.bfpt.rule=Host(`bfpt.skeblow.net`)"
       - "traefik.http.routers.bfpt.entrypoints=web"
-    
+
   skeblow-bfpt-db:
     extends:
       container_name: "skeblow-bfpt-db"
       file: ../bug-free-palm-tree/docker-compose.yaml
       service: bfpt-db
+    networks:
+      - bfpt
 
+networks:
+  traefik-docker-socket:
+  default:
+  bfpt:
+
+configs:
+  traefik:
+    file: traefik.yaml
+
+secrets:
+  cf-dns-api-token:
+    file: secrets/cf-dns-api-token.txt
