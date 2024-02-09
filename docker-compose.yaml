@@ -40,7 +40,7 @@ services:
       NETWORKS: 1
       TASKS: 1
     volumes:
-      - "/run/user/1000/docker.sock:/var/run/docker.sock:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
   skeblow-bfpt:
     extends:
@@ -50,10 +50,13 @@ services:
     networks:
       - default
       - bfpt
+    command: deno task prod 
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.bfpt.rule=Host(`bfpt.skeblow.net`)"
       - "traefik.http.routers.bfpt.entrypoints=web"
+      - "traefik.http.routers.bfpt.tls=true"
+      - "traefik.http.routers.bfpt.tls.certresolver=letsencrypt"
 
   skeblow-bfpt-db:
     extends:
@@ -63,10 +66,39 @@ services:
     networks:
       - bfpt
 
+  skeblow-photos:
+    extends:
+      file: ../photoprism/docker-compose.yaml
+      service: photoprism
+    container_name: "skeblow-photos"
+    environment:
+      PHOTOPRISM_DATABASE_SERVER: "skeblow-photos-mariadb:3306"
+      PHOTOPRISM_SITE_URL: "https://photos.skeblow.net/"
+      PHOTOPRISM_DISABLE_TLS: "true"
+      PHOTOPRISM_DEFAULT_TLS: "false"
+    networks:
+      - default
+      - photoprism
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.photos.rule=Host(`photos.skeblow.net`)"
+      - "traefik.http.routers.photos.entrypoints=web"
+      - "traefik.http.routers.photos.tls=true"
+      - "traefik.http.routers.photos.tls.certresolver=letsencrypt"
+
+  skeblow-photos-mariadb:
+    extends:
+      file: ../photoprism/docker-compose.yaml
+      service: photoprism-mariadb
+    container_name: "skeblow-photos-mariadb"
+    networks:
+      - photoprism
+
 networks:
   traefik-docker-socket:
   default:
   bfpt:
+  photoprism:
 
 configs:
   traefik:
@@ -75,3 +107,7 @@ configs:
 secrets:
   cf-dns-api-token:
     file: secrets/cf-dns-api-token.txt
+
+volumes:
+  db-data:
+  deno-cache:
