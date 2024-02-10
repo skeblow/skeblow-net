@@ -62,7 +62,7 @@ services:
       - "traefik.http.routers.bfpt.entrypoints=web"
       - "traefik.http.routers.bfpt.tls=true"
       - "traefik.http.routers.bfpt.tls.certresolver=letsencrypt"
-      - "traefik.http.services.skeblow-bfpt.loadbalancer.server.port=8000"
+      - "traefik.http.services.bfpt.loadbalancer.server.port=8000"
 
   skeblow-bfpt-db:
     extends:
@@ -70,7 +70,7 @@ services:
       service: bfpt-db
     container_name: "skeblow-bfpt-db"
     volumes:
-      - db-data:/var/lib/postgresql 
+      - db-data:/var/lib/mysql
     networks:
       - bfpt
 
