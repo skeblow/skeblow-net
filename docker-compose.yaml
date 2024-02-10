@@ -46,23 +46,31 @@ services:
     extends:
       file: ../bug-free-palm-tree/docker-compose.yaml
       service: bfpt
-      container_name: "skeblow-bfpt"
+    container_name: "skeblow-bfpt"
     networks:
       - default
       - bfpt
-    command: deno task prod 
+    depends_on:
+      - traefik
+      - skeblow-bfpt-db
+    environment:
+      - DB_HOST=skeblow-bfpt-db
+    command: deno task prod
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.bfpt.rule=Host(`bfpt.skeblow.net`)"
       - "traefik.http.routers.bfpt.entrypoints=web"
       - "traefik.http.routers.bfpt.tls=true"
       - "traefik.http.routers.bfpt.tls.certresolver=letsencrypt"
+      - "traefik.http.services.skeblow-bfpt.loadbalancer.server.port=8000"
 
   skeblow-bfpt-db:
     extends:
-      container_name: "skeblow-bfpt-db"
       file: ../bug-free-palm-tree/docker-compose.yaml
       service: bfpt-db
+    container_name: "skeblow-bfpt-db"
+    volumes:
+      - db-data:/var/lib/postgresql 
     networks:
       - bfpt
 
@@ -76,6 +84,9 @@ services:
       PHOTOPRISM_SITE_URL: "https://photos.skeblow.net/"
       PHOTOPRISM_DISABLE_TLS: "true"
       PHOTOPRISM_DEFAULT_TLS: "false"
+    depends_on:
+      - traefik
+      - skeblow-photos-mariadb
     networks:
       - default
       - photoprism
@@ -85,14 +96,18 @@ services:
       - "traefik.http.routers.photos.entrypoints=web"
       - "traefik.http.routers.photos.tls=true"
       - "traefik.http.routers.photos.tls.certresolver=letsencrypt"
+    profiles:
+      - photos
 
   skeblow-photos-mariadb:
     extends:
       file: ../photoprism/docker-compose.yaml
       service: photoprism-mariadb
     container_name: "skeblow-photos-mariadb"
-    networks:
+    networks: 
       - photoprism
+    profiles:
+      - photos
 
 networks:
   traefik-docker-socket:
