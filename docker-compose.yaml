@@ -109,6 +109,25 @@ services:
     profiles:
       - photos
 
+  skeblow-ourflix:
+    image: jellyfin/jellyfin
+    container_name: "skeblow-ourflix"
+    volumes:
+      - ourflix-config:/config
+      - ourflix-cache:/cache
+      - /run/media/skeblow/archive/torrent:/media
+    restart: 'unless-stopped'
+    environment:
+      - JELLYFIN_PublishedServerUrl=https://ourflix.skeblow.net
+    ports:
+      - '8096:8096'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ourflix.rule=Host(`ourflix.skeblow.net`)"
+      - "traefik.http.routers.ourflix.entrypoints=web"
+      - "traefik.http.routers.ourflix.tls=true"
+      - "traefik.http.routers.ourflix.tls.certresolver=letsencrypt"
+
 networks:
   traefik-docker-socket:
   default:
@@ -126,3 +145,5 @@ secrets:
 volumes:
   db-data:
   deno-cache:
+  ourflix-config:
+  ourflix-cache:
