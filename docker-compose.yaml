@@ -80,7 +80,7 @@ services:
       service: photoprism
     container_name: "skeblow-photos"
     environment:
-      PHOTOPRISM_DATABASE_SERVER: "skeblow-photos-mariadb:3306"
+      PHOTOPRISM_DATABASE_SERVER: "skeblow-photos-db:3306"
       PHOTOPRISM_SITE_URL: "https://photos.skeblow.net/"
       PHOTOPRISM_DISABLE_TLS: "true"
       PHOTOPRISM_DEFAULT_TLS: "false"
@@ -99,11 +99,11 @@ services:
     profiles:
       - photos
 
-  skeblow-photos-mariadb:
+  skeblow-photos-db:
     extends:
       file: ../photoprism/docker-compose.yaml
       service: photoprism-mariadb
-    container_name: "skeblow-photos-mariadb"
+    container_name: "skeblow-photos-db"
     networks: 
       - photoprism
     profiles:
