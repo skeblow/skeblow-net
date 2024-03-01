@@ -47,12 +47,12 @@ services:
       file: ../bug-free-palm-tree/docker-compose.yaml
       service: bfpt
     container_name: "skeblow-bfpt"
-    networks:
-      - default
-      - bfpt
-    depends_on:
-      - traefik
-      - skeblow-bfpt-db
+    #networks:
+    #  - default
+    #  - bfpt
+    #depends_on:
+    #  - traefik
+    #  - skeblow-bfpt-db
     environment:
       - DB_HOST=skeblow-bfpt-db
     command: deno task prod
@@ -62,7 +62,7 @@ services:
       - "traefik.http.routers.bfpt.entrypoints=web"
       - "traefik.http.routers.bfpt.tls=true"
       - "traefik.http.routers.bfpt.tls.certresolver=letsencrypt"
-      - "traefik.http.services.bfpt.loadbalancer.server.port=8000"
+      - "traefik.docker.network=default"
 
   skeblow-bfpt-db:
     extends:
@@ -71,8 +71,8 @@ services:
     container_name: "skeblow-bfpt-db"
     volumes:
       - db-data:/var/lib/mysql
-    networks:
-      - bfpt
+    #networks:
+    #  - bfpt
 
   skeblow-photos:
     extends:
