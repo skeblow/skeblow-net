@@ -86,7 +86,7 @@ services:
       PHOTOPRISM_DEFAULT_TLS: "false"
     depends_on:
       - traefik
-      - skeblow-photos-mariadb
+      - skeblow-photos-db
     networks:
       - default
       - photoprism
