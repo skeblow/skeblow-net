@@ -1,2 +1,4 @@
 letsencrypt/*
 secrets/*
+adguard/work/*
+adguard/conf/*

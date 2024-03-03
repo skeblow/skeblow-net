@@ -96,8 +96,8 @@ services:
       - "traefik.http.routers.photos.entrypoints=web"
       - "traefik.http.routers.photos.tls=true"
       - "traefik.http.routers.photos.tls.certresolver=letsencrypt"
-    profiles:
-      - photos
+        #profiles:
+        #- photos
 
   skeblow-photos-db:
     extends:
@@ -106,8 +106,8 @@ services:
     container_name: "skeblow-photos-db"
     networks: 
       - photoprism
-    profiles:
-      - photos
+        #profiles:
+        #- photos
 
   skeblow-ourflix:
     image: jellyfin/jellyfin
@@ -121,12 +121,32 @@ services:
       - JELLYFIN_PublishedServerUrl=https://ourflix.skeblow.net
     ports:
       - '8096:8096'
+    profiles: 
+      - ourflix
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ourflix.rule=Host(`ourflix.skeblow.net`)"
       - "traefik.http.routers.ourflix.entrypoints=web"
       - "traefik.http.routers.ourflix.tls=true"
       - "traefik.http.routers.ourflix.tls.certresolver=letsencrypt"
+    
+  skeblow-adguard:
+    image: adguard/adguardhome
+    container_name: skeblow-adguard
+    volumes: 
+      - ./adguard/conf:/opt/adguardhome/conf
+      - ./adguard/work:/opt/adguardhome/work
+    ports:
+      - "3000:3000"
+      - "53:53"
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true" 
+      - "traefik.http.routers.adguard.rule=Host(`adguard.skeblow.net`)"
+      - "traefik.http.routers.adguard.entrypoints=web"
+      - "traefik.http.routers.adguard.tls=true"
+      - "traefik.http.routers.adguard.tls.certresolver=letsencrypt"
+      - "traefik.http.services.adguard.loadbalancer.server.port=3000"
 
 networks:
   traefik-docker-socket:
